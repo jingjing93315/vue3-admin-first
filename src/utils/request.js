@@ -1,6 +1,8 @@
 import axios from 'axios'
 import router from '../router'
 
+import storage from './storage'
+
 import config from '../config'
 
 import { ElMessage } from 'element-plus'
@@ -17,10 +19,12 @@ const service = axios.create({
 // 请求的拦截
 service.interceptors.request.use((req) => {
   // 一些公共的请求机制
-  const header = req.headers
+  const headers = req.headers
 
-  if(!header.Authorization) {
-    header.Authorization = 'Gj'
+  const { token = '' } = storage.getItem('userInfo') || {}
+
+  if(!headers.Authorization) {
+    headers.Authorization = 'Bearer ' + token
   }
   return req
 })
@@ -29,6 +33,7 @@ service.interceptors.request.use((req) => {
 service.interceptors.response.use((res) => {
   // 一些公共的响应机制
   const { code, data, msg } = res.data
+
 
   if(code === 200){
     return data
@@ -41,8 +46,8 @@ service.interceptors.response.use((res) => {
 
     return Promise.reject(TOKEN_ERROR)
   } else {
-    ElMessage.error(NETWORK_ERROR)
-    return Promise.reject(NETWORK_ERROR)
+    ElMessage.error(msg || NETWORK_ERROR)
+    return Promise.reject(msg || NETWORK_ERROR)
   }
 })
 // 核心的request函数

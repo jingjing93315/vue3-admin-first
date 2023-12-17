@@ -1,22 +1,28 @@
 <script>
 import TreeMenu from './TreeMenu.vue'
+import Breadcrumb from './BreadCrumb.vue'
+import storage from '../utils/storage'
 export default {
   name: 'home',
   components: {
-    TreeMenu
+    TreeMenu,
+    Breadcrumb
   },
   data(){
     return {
-      userInfo: this.$store.state.userInfo,
+      userInfo: this.$store.state.userInfo || {},
       isCollapse: false,
-      userMenu: [],
-      noticeCount: 0,
       userMenu: []
     }
   },
+  computed:{
+    noticeCount() {
+      return this.$store.state.noticeCount
+    }
+  },
   mounted(){
-    this.getNoticeCount()
     this.getMenuList()
+    this.getNoticeCount()
   },
   methods: {
     handleLogout(key){
@@ -24,17 +30,19 @@ export default {
       this.$store.commit('saveUserInfo', '')
       this.userInfo = null
       this.$router.push('/login')
+      window.localStorage.clear()
     },
     toggle(){
       this.isCollapse = !this.isCollapse
     },
-    async getNoticeCount(){
-      const res = await this.$api.noticeCount()
-      this.noticeCount = res
+    async getNoticeCount() {
+      await this.$store.dispatch("noticeCountGet")
     },
     async getMenuList(){
-      const res = await this.$api.menuList()
-      this.userMenu = res.menuList
+      const { menuList, actionList } = await this.$api.permissionList()
+      this.userMenu = menuList
+      this.$store.commit('saveMenuList', menuList)
+      this.$store.commit('saveActionList', actionList)
     }
   }
 }
@@ -63,9 +71,11 @@ export default {
       <div class="nav-top">
         <div class="nav-left">
           <fold class="menu-fold" @click="toggle"></fold>
-          <div class="bread">面包屑</div>
+          <div class="bread">
+            <breadcrumb />
+          </div>
         </div>
-        <div class="user-info">
+        <div class="user-info" v-if="userInfo">
           <el-badge 
             :is-dot="noticeCount > 0 ? true: false" 
             class="user-badge"
@@ -74,7 +84,7 @@ export default {
               <bell></bell>
             </el-icon>
           </el-badge>
-          <el-dropdown @command="handleLogout">
+          <el-dropdown class="dropdown" @command="handleLogout">
             <span class="user-link">
              {{userInfo.userName}}
               <el-icon class="el-icon--right">
@@ -91,9 +101,7 @@ export default {
         </div>
       </div>
       <div class="wrapper">
-        <div class="main-page">
-          <router-view />
-        </div>
+        <router-view />
       </div>
     </div>
   </div>
@@ -170,6 +178,9 @@ export default {
         .user-link {
           cursor: pointer;
           color: #4091ff;
+        }
+        .el-dropdown  {
+          vertical-align: text-top;
         }
       }
     }

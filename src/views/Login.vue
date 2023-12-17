@@ -48,19 +48,7 @@ export default {
     view(){
       return View
     }
-  },
-  mounted() {
-    // this.$request({
-    //   method: 'get',
-    //   url : '/login',
-    //   data: {
-    //     name: 'Gj'
-    //   }
-    // }).then(res => {
-    //   console.log(res)
-    // })
-
-  },
+  }
 }
 </script>
 

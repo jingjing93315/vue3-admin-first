@@ -16,4 +16,18 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.config.globalProperties.$request = request
 app.config.globalProperties.$api = api
 app.config.globalProperties.$storage = storage
-app.use(router).use(ElementPlus).use(store).mount('#app')
+
+app.directive('has', {
+  beforeMount: (el, binding) => {
+    let userAction = storage.getItem('actionList')
+    let value = binding.value
+    let hasPermission = userAction.includes(value)
+    if(!hasPermission) {
+      el.style.display = 'none'
+      setTimeout(() => {
+        el.parentNode.removeChild(el)
+      }, 0);
+    }
+  }
+})
+app.use(router).use(ElementPlus, { size: 'small' }).use(store).mount('#app')
